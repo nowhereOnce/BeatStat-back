@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 import requests
 from app.utils.spotify import refresh_token
 
@@ -6,9 +7,10 @@ router = APIRouter()
 
 @router.get("/playlists")
 def get_playlists(request: Request):
+    
     access_token = request.cookies.get("access_token")
     if not access_token:
-        raise HTTPException(status_code=401, detail="No hay token de acceso")
+        return RedirectResponse("/")
     
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -17,7 +19,7 @@ def get_playlists(request: Request):
     if spotify_response.status_code == 401:
         refresh_token = request.cookies.get("refresh_token")
         if not refresh_token:
-            raise HTTPException(status_code=401, detail="No hay refresh token")
+            raise HTTPException(status_code=401, detail="Theres no refresh token")
         
         new_access_token = refresh_token(refresh_token)
         

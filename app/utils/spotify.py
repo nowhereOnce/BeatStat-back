@@ -1,13 +1,17 @@
 import requests
 from fastapi import HTTPException
+import os
+
+CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
+CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 
 def refresh_token(refresh_token: str):
     token_url = "https://accounts.spotify.com/api/token"
     payload = {
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
-        "client_id": "75ad3abf75da4244ada0b84923fcb1c8",
-        "client_secret": "T552821b2c12f4d03aceb71b602f9ba57",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET
     }
     response = requests.post(token_url, data=payload)
     if response.status_code != 200:

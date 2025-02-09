@@ -4,6 +4,14 @@ import secrets
 import urllib.parse
 import requests
 from app.utils.spotify import refresh_token
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
+SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 
 router = APIRouter()
 
@@ -18,9 +26,9 @@ def login():
         "https://accounts.spotify.com/authorize?" +
         urllib.parse.urlencode({
             "response_type": "code",
-            "client_id": "75ad3abf75da4244ada0b84923fcb1c8",
+            "client_id": SPOTIFY_CLIENT_ID,
             "scope": scope,
-            "redirect_uri": "http://localhost:8000/callback",
+            "redirect_uri": SPOTIFY_REDIRECT_URI,
             "state": state
         })
     )
@@ -34,9 +42,9 @@ def callback(code: str, response: Response):
     payload = {
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": "http://localhost:8000/callback",
-        "client_id": "75ad3abf75da4244ada0b84923fcb1c8",
-        "client_secret": "552821b2c12f4d03aceb71b602f9ba57"
+        "redirect_uri": SPOTIFY_REDIRECT_URI,
+        "client_id": SPOTIFY_CLIENT_ID,
+        "client_secret": SPOTIFY_CLIENT_SECRET
     }
     
     spotify_response = requests.post(token_url, data=payload)

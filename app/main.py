@@ -1,21 +1,12 @@
-from fastapi import FastAPI, Depends, Request, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
-from spotipy.cache_handler import RedisCacheHandler
 from dotenv import load_dotenv
-from app.dependencies import (
-    get_spotify_user_id,
-    get_cache_handler,
-    get_user_spotify_oauth,
-    get_spotify_client,
-    redis_client,
-    SPOTIFY_CLIENT_ID,
-    SPOTIFY_CLIENT_SECRET,
-    SPOTIFY_REDIRECT_URI,
-    SCOPE,
-)
+from app.dependencies import get_spotify_user_id, get_cache_handler
+from app.dependencies import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, SCOPE
+from app.routes.routes import router
 
 load_dotenv()
 
@@ -56,7 +47,7 @@ def read_root(request: Request):
         auth_url = sp_oauth.get_authorize_url()
         return RedirectResponse(auth_url)
     
-    return RedirectResponse("/get_playlists")
+    return RedirectResponse("/me/top-tracks")
 
 @app.get("/callback")
 def callback(code: str, response: Response):
@@ -73,7 +64,7 @@ def callback(code: str, response: Response):
     cache_handler.save_token_to_cache(token_info)
     
     # Guarda el user_id en una cookie
-    response = RedirectResponse("/get_playlists")
+    response = RedirectResponse("/me/top-tracks")
     response.set_cookie(
         key="spotify_user_id",
         value=user_id,
@@ -84,8 +75,5 @@ def callback(code: str, response: Response):
     
     return response
 
-@app.get("/get_playlists")
-def get_playlists(sp: Spotify = Depends(get_spotify_client)):
-    playlists = sp.current_user_playlists()
-    return playlists
-
+# Incluir rutas
+app.include_router(router=router)

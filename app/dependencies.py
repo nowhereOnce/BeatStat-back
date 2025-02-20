@@ -11,7 +11,7 @@ load_dotenv()
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
-SCOPE = "user-library-read"
+SCOPE = "user-library-read, user-top-read"
 
 redis_client = redis.Redis(host="localhost", port=6379, db=0)
 

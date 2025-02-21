@@ -16,7 +16,14 @@ def get_tracks(
     time_range: str = "medium_term"
 ):
     tracks = sp.current_user_top_tracks(limit=5, time_range=time_range)
-    tracks_names_dict = {
-        "tracks": [track["name"] for track in tracks["items"]]
-    }
-    return tracks_names_dict
+    tracks_info = []
+    
+    for track in tracks["items"]:
+        track_info = {
+            "name": track["name"],
+            "artist": track["artists"][0]["name"],
+            "image": track["album"]["images"][0]["url"]
+        }
+        tracks_info.append(track_info)
+    
+    return {"tracks": tracks_info}

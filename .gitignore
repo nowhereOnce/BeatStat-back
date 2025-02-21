@@ -5,3 +5,4 @@ docker-compose.yml
 .cache
 app/__pycache__
 routes/__pycache__
+__pycache__/

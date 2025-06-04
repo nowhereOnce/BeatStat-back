@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from app.dependencies import get_spotify_user_id, get_cache_handler
 from app.dependencies import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, SCOPE
 from app.routes.routes import router
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -14,8 +15,25 @@ load_dotenv()
 app = FastAPI()
 security = HTTPBearer()
 
+# List of allowed origins for CORS
+# Only include the frontend domains
+# THIS MIGHT NEED TO BE CHANGED!!!
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# Middleware to handle CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Used to get the user's authorization code
-sp_oauth = SpotifyOAuth(
+global_sp_oauth = SpotifyOAuth(
         client_id=SPOTIFY_CLIENT_ID,
         client_secret=SPOTIFY_CLIENT_SECRET,
         redirect_uri=SPOTIFY_REDIRECT_URI,
@@ -23,7 +41,8 @@ sp_oauth = SpotifyOAuth(
         show_dialog=True,
     )
 
-default_redirect_endpoint = "/me/top-tracks"
+#THIS NEEDS TO BE CHANGED TO SOME ROUTE IN THE FRONTEND
+default_redirect_endpoint = "/me/top-tracks" 
 
 @app.get("/")
 def read_root(request: Request):
@@ -34,7 +53,7 @@ def read_root(request: Request):
     try:
         user_id = get_spotify_user_id(request)
     except Exception:
-        auth_url = sp_oauth.get_authorize_url()
+        auth_url = global_sp_oauth.get_authorize_url()
         return RedirectResponse(auth_url)
     
     # If the user is authenticated, redirect to the default endpoint
@@ -70,7 +89,7 @@ def callback(code: str, response: Response):
     """
     
     # Obtain access token
-    token_info = sp_oauth.get_access_token(code)
+    token_info = global_sp_oauth.get_access_token(code)
     sp = Spotify(auth=token_info["access_token"])
     
     # Obtain user ID

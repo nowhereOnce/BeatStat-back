@@ -1,4 +1,4 @@
-/venv
+/.venv
 /__pycache__
 .env
 docker-compose.yml
@@ -6,3 +6,6 @@ docker-compose.yml
 app/__pycache__
 routes/__pycache__
 __pycache__/
+/node_modules
+package-lock.json
+package.json

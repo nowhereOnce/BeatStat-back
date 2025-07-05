@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
+from fastapi.exceptions import HTTPException
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
@@ -94,6 +95,10 @@ def callback(code: str, response: Response):
     
     # Obtain user ID
     user_info = sp.current_user()
+
+    if user_info is None or "id" not in user_info:
+        raise HTTPException(status_code=500, detail="Expected user data was not received. The object is None")
+
     user_id = user_info["id"]
     
     # Save token in cache (Redis)
@@ -107,7 +112,7 @@ def callback(code: str, response: Response):
         value=user_id,
         httponly=True,
         secure=True,  # HTTPS only
-        samesite="Lax"
+        samesite="lax"
     )
     
     return response

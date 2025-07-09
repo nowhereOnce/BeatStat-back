@@ -43,7 +43,7 @@ global_sp_oauth = SpotifyOAuth(
     )
 
 #THIS NEEDS TO BE CHANGED TO SOME ROUTE IN THE FRONTEND
-default_redirect_endpoint = "/me/top-tracks" 
+default_redirect_endpoint = "http://localhost:5173/me" 
 
 @app.get("/")
 def read_root(request: Request):
@@ -91,7 +91,10 @@ def callback(code: str, response: Response):
     
     # Obtain access token
     token_info = global_sp_oauth.get_access_token(code)
-    sp = Spotify(auth=token_info["access_token"])
+    if token_info:
+        sp = Spotify(auth=token_info["access_token"])
+    else:
+        raise HTTPException(status_code=500, detail="No access token was obtained")
     
     # Obtain user ID
     user_info = sp.current_user()

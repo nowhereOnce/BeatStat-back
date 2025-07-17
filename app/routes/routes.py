@@ -22,7 +22,7 @@ def get_tracks(
     """
     This endpoint returns the user's top 5 tracks.
     """
-    tracks = sp.current_user_top_tracks(limit=5, time_range=time_range)
+    tracks = sp.current_user_top_tracks(limit=10, time_range=time_range)
     tracks_info = []
     
     if tracks and "items"  in tracks:

@@ -120,5 +120,19 @@ def callback(code: str, response: Response):
     
     return response
 
+@app.post("/logout")
+def logout(response: Response):
+    """
+    Deletes the authentication cookie.
+    """
+    response = Response(status_code=200)
+    response.delete_cookie(
+        key="spotify_user_id",
+        httponly=True,
+        secure=True,
+        samesite="lax"
+    )
+    return response
+
 # Include the routers
 app.include_router(router=router)

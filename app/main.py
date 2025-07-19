@@ -45,8 +45,8 @@ global_sp_oauth = SpotifyOAuth(
 #THIS NEEDS TO BE CHANGED TO SOME ROUTE IN THE FRONTEND
 default_redirect_endpoint = "http://localhost:5173/me" 
 
-@app.get("/")
-def read_root(request: Request):
+@app.get("/login")
+def login(request: Request):
     """
     Checks if the user is authenticated by checking the cookie.
     If not, redirects to the Spotify login page.
@@ -133,6 +133,10 @@ def logout(response: Response):
         samesite="lax"
     )
     return response
+
+@app.get("/")
+def read_root():
+    return {"message": "BeatStat-backend"}
 
 # Include the routers
 app.include_router(router=router)

@@ -26,6 +26,7 @@ origins = [
     "https://beatstat.com",
     "https://www.beatstat.com",
     "https://app.beatstat.com",
+    "https://www.app.beatstat.com",
 ]
 
 # Middleware to handle CORS
@@ -120,6 +121,7 @@ def callback(code: str, response: Response):
         value=user_id,
         httponly=True,
         secure=False,  # HTTPS only
+        domain=".beatstat.com",
         samesite="lax"
     )
     

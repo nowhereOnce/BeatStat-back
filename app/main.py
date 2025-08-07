@@ -39,13 +39,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Used to get the user's authorization code
-global_sp_oauth = SpotifyOAuth(
+# Helper function to create a new SpotifyOAuth instance
+def create_spotify_oauth():
+    return SpotifyOAuth(
         client_id=SPOTIFY_CLIENT_ID,
         client_secret=SPOTIFY_CLIENT_SECRET,
         redirect_uri=SPOTIFY_REDIRECT_URI,
         scope=SCOPE,
-        show_dialog=True,
+        show_dialog=True
     )
 
 #THIS NEEDS TO BE CHANGED TO SOME ROUTE IN THE FRONTEND
@@ -60,7 +61,8 @@ def login(request: Request):
     try:
         user_id = get_spotify_user_id(request)
     except Exception:
-        auth_url = global_sp_oauth.get_authorize_url()
+        sp_oauth = create_spotify_oauth()
+        auth_url = sp_oauth.get_authorize_url()
         return RedirectResponse(auth_url)
     
     # If the user is authenticated, redirect to the default endpoint
@@ -96,7 +98,8 @@ def callback(code: str, response: Response):
     """
     
     # Obtain access token
-    token_info = global_sp_oauth.get_access_token(code)
+    sp_oauth = create_spotify_oauth()
+    token_info = sp_oauth.get_access_token(code)
     if token_info:
         sp = Spotify(auth=token_info["access_token"])
     else:

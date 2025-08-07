@@ -120,7 +120,7 @@ def callback(code: str, response: Response):
         key="spotify_user_id",
         value=user_id,
         httponly=True,
-        secure=False,  # HTTPS only
+        secure=True,  # HTTPS only
         domain=".beatstat.com",
         samesite="lax"
     )
@@ -136,7 +136,8 @@ def logout(response: Response):
     response.delete_cookie(
         key="spotify_user_id",
         httponly=True,
-        secure=False,
+        secure=True,
+        domain=".beatstat.com",
         samesite="lax"
     )
     return response

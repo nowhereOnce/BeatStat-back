@@ -9,6 +9,7 @@ from app.dependencies import get_spotify_user_id, get_cache_handler
 from app.dependencies import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, SCOPE
 from app.routes.routes import router
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 load_dotenv()
 
@@ -22,12 +23,16 @@ security = HTTPBearer()
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://beatstat.com",
+    "https://www.beatstat.com",
+    "https://app.beatstat.com",
 ]
 
 # Middleware to handle CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    #allow_origins=origins,
+    allow_origins=["*"],  # Allow all origins for development purposes
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,7 +48,7 @@ global_sp_oauth = SpotifyOAuth(
     )
 
 #THIS NEEDS TO BE CHANGED TO SOME ROUTE IN THE FRONTEND
-default_redirect_endpoint = "http://localhost:5173/me" 
+default_redirect_endpoint = os.getenv("DEFAULT_REDIRECT_ENDPOINT", "http://localhost:5173/") 
 
 @app.get("/login")
 def login(request: Request):
@@ -114,7 +119,7 @@ def callback(code: str, response: Response):
         key="spotify_user_id",
         value=user_id,
         httponly=True,
-        secure=True,  # HTTPS only
+        secure=False,  # HTTPS only
         samesite="lax"
     )
     
@@ -129,7 +134,7 @@ def logout(response: Response):
     response.delete_cookie(
         key="spotify_user_id",
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax"
     )
     return response

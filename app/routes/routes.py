@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from app.dependencies import get_spotify_client
+#from app.dependencies import get_spotify_client
+from app.dependencies import get_spotify_client, get_session_id, get_user_session
 from spotipy import Spotify
 
 
@@ -16,12 +17,15 @@ def get_playlists(sp: Spotify = Depends(get_spotify_client)):
 
 @router.get("/top-tracks")
 def get_tracks(
-    sp: Spotify = Depends(get_spotify_client),
+    session_id: str = Depends(get_session_id),
     time_range: str = "short_term"
 ):
     """
     This endpoint returns the user's top 5 tracks.
     """
+    session_data = get_user_session(session_id)
+    sp = get_spotify_client(session_data, session_id)
+    
     tracks = sp.current_user_top_tracks(limit=10, time_range=time_range)
     tracks_info = []
     

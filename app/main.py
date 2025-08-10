@@ -1,16 +1,18 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 from fastapi.exceptions import HTTPException
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
-from app.dependencies import get_spotify_user_id, get_cache_handler
-from app.dependencies import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, SCOPE
+#from app.dependencies import get_spotify_user_id, get_cache_handler
+#from app.dependencies import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, SCOPE
 from app.routes.routes import router
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
+import uuid
+from app.dependencies import get_spotify_oauth, save_user_session, get_user_session, get_session_id, get_spotify_client
 
 load_dotenv()
 
@@ -20,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 # Get environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-DEFAULT_REDIRECT_ENDPOINT = os.getenv("FRONTEND_URL", "http://localhost:5173/me")
+
+# Configuración de sesión
+SESSION_EXPIRE_MINUTES = 60 * 24  # 24 horas
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -52,15 +56,6 @@ else:
         allow_headers=["*"],
     )
 
-# Helper function to create a new SpotifyOAuth instance
-def create_spotify_oauth():
-    return SpotifyOAuth(
-        client_id=SPOTIFY_CLIENT_ID,
-        client_secret=SPOTIFY_CLIENT_SECRET,
-        redirect_uri=SPOTIFY_REDIRECT_URI,
-        scope=SCOPE,
-        show_dialog=True
-    )
 
 # Get the correct domain for cookies based on environment
 def get_cookie_domain():
@@ -72,103 +67,65 @@ def get_cookie_domain():
     return None  # For development
 
 #THIS NEEDS TO BE CHANGED TO SOME ROUTE IN THE FRONTEND
-default_redirect_endpoint = os.getenv("DEFAULT_REDIRECT_ENDPOINT", "http://localhost:5173/") 
+DEFAULT_REDIRECT_ENDPOINT = os.getenv("DEFAULT_REDIRECT_ENDPOINT", "http://localhost:8000/status") 
+logger.info(f"Default redirect endpoint: {DEFAULT_REDIRECT_ENDPOINT}")
+
 
 @app.get("/login")
-def login(request: Request):
-    """
-    Checks if the user is authenticated by checking the cookie.
-    If not, redirects to the Spotify login page.
-    """
-    logger.info(f"Login attempt from: {request.client.host}")
-
-    try:
-        user_id = get_spotify_user_id(request)  
-        logger.info(f"User already authenticated: {user_id}")
-    except Exception as e:
-        logger.info(f"User not authenticated, redirecting to Spotify: {str(e)}")
-        sp_oauth = create_spotify_oauth()
-        auth_url = sp_oauth.get_authorize_url()
-        return RedirectResponse(auth_url)
-    
-    # If the user is authenticated, redirect to the default endpoint
-    cache_handler = get_cache_handler(user_id)
-    
-    sp_oauth = SpotifyOAuth(
-        client_id=SPOTIFY_CLIENT_ID,
-        client_secret=SPOTIFY_CLIENT_SECRET,
-        redirect_uri=SPOTIFY_REDIRECT_URI,
-        scope=SCOPE,
-        cache_handler=cache_handler,
-        show_dialog=True,
-    )
-    
-    # If the token is not valid, redirect to the Spotify login page
-    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
-        logger.info(f"Token invalid for user: {user_id}")
-        auth_url = sp_oauth.get_authorize_url()
-        return RedirectResponse(auth_url)
-    
-    return RedirectResponse(default_redirect_endpoint)
+async def login():
+    """Iniciar proceso de autenticación con Spotify"""
+    sp_oauth = get_spotify_oauth()
+    auth_url = sp_oauth.get_authorize_url()
+    return RedirectResponse(url=auth_url)
 
 
 @app.get("/callback")
-def callback(code: str, response: Response, request: Request):
-    """
-    This endpoint is called by Spotify after the user has authorized the app.
-    Obtains the access token and user ID, saves the token in cache (Redis), 
-    and redirects to the default endpoint.
+async def callback(request: Request, response: Response):
+    """Callback después de la autenticación con Spotify"""
+    code = request.query_params.get("code")
+    error = request.query_params.get("error")
     
-    Parameters:
-    - code: Authorization code provided by Spotify.
-    - response: FastAPI Response object.
-    """
-    logger.info(f"Callback received from: {request.client.host}")
+    if error:
+        raise HTTPException(status_code=400, detail=f"Spotify auth error: {error}")
     
-    # Obtain access token
-    sp_oauth = create_spotify_oauth()
-    token_info = sp_oauth.get_access_token(code)
-
-    if not token_info:
-        logger.error("No access token was obtained")
-        raise HTTPException(status_code=500, detail="No access token was obtained")
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code received")
     
-    sp = Spotify(auth=token_info["access_token"])
-    
-    # Obtain user ID
-    user_info = sp.current_user()
-
-    if user_info is None or "id" not in user_info:
-        logger.error("Expected user data was not received")
-        raise HTTPException(status_code=500, detail="Expected user data was not received. The object is None")
-
-    user_id = user_info["id"]
-    logger.info(f"Processing callback for user: {user_id}")
-    
-    # Save token in cache (Redis)
-    cache_handler = get_cache_handler(user_id)
-    cache_handler.save_token_to_cache(token_info)
-    logger.info(f"Token saved for user: {user_id}")
-    
-    # Save user ID in a cookie and redirect to
-    response = RedirectResponse(default_redirect_endpoint)
-
-    # Cookie configuration based on environment
-    cookie_domain = get_cookie_domain()
-    cookie_secure = ENVIRONMENT == "production"
-
-    response.set_cookie(
-        key="spotify_user_id",
-        value=user_id,
-        httponly=True,
-        secure=cookie_secure,  # HTTPS only
-        domain=cookie_domain,
-        samesite="lax"
-    )
-
-    logger.info(f"Cookie set for user: {user_id} with domain: {cookie_domain}")
-    
-    return response
+    try:
+        # Obtener token de acceso
+        sp_oauth = get_spotify_oauth()
+        token_info = sp_oauth.get_access_token(code)
+        
+        # Crear cliente de Spotify
+        sp = Spotify(auth=token_info['access_token'])
+        
+        # Obtener información del usuario
+        user_info = sp.current_user()
+        if not user_info:
+            raise HTTPException(status_code=401, detail="Failed to retrieve user information from Spotify")
+        
+        # Crear session ID único
+        session_id = str(uuid.uuid4())
+        
+        # Guardar sesión en Redis
+        save_user_session(session_id, token_info, user_info)
+        
+        # Establecer cookie de sesión
+        response = RedirectResponse(url=DEFAULT_REDIRECT_ENDPOINT)
+        response.set_cookie(
+            key="session_token",
+            value=session_id,
+            max_age=SESSION_EXPIRE_MINUTES * 60,  # en segundos
+            httponly=True,
+            secure=ENVIRONMENT == "production",  # Cambiar a True en producción con HTTPS
+            domain=get_cookie_domain(),  # Configurar dominio de la cookie
+            samesite="lax"
+        )
+        
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
 
 @app.post("/logout")
 def logout(response: Response):
@@ -182,7 +139,7 @@ def logout(response: Response):
     cookie_secure = ENVIRONMENT == "production"
 
     response.delete_cookie(
-        key="spotify_user_id",
+        key="session_token",
         httponly=True,
         secure=cookie_secure,  # HTTPS only
         domain=cookie_domain,
@@ -190,21 +147,31 @@ def logout(response: Response):
     )
     return response
 
-# Debug endpoint to check current user
-@app.get("/debug/current-user")
-def debug_current_user(request: Request):
-    """
-    Debug endpoint to check which user is currently authenticated.
-    Remove in production.
-    """
-    if ENVIRONMENT == "production":
-        raise HTTPException(status_code=404, detail="Not found")
-    
+@app.get("/status")
+async def get_status(session_id: str = Depends(get_session_id)):
+    """Obtener estado de la sesión actual"""
     try:
-        user_id = get_spotify_user_id(request)
-        return {"user_id": user_id, "cookies": dict(request.cookies)}
-    except Exception as e:
-        return {"error": str(e), "cookies": dict(request.cookies)}
+        session_data = get_user_session(session_id)
+        
+        # Verificar que el token es válido y obtener información actualizada del usuario
+        sp = get_spotify_client(session_data, session_id)
+        current_user = sp.current_user()
+        if not current_user:
+            raise HTTPException(status_code=401, detail="Failed to retrieve user information from Spotify")
+        
+        return {
+            "authenticated": True,
+            "user": {
+                "id": current_user["id"],
+                "display_name": current_user["display_name"],
+                "email": current_user.get("email")
+            },
+            "session_created": session_data["created_at"]
+        }
+        
+    except HTTPException:
+        return {"authenticated": False}
+
 
 @app.get("/")
 def read_root():

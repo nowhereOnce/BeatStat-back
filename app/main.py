@@ -94,7 +94,7 @@ async def callback(request: Request, response: Response):
     try:
         # Obtener token de acceso
         sp_oauth = get_spotify_oauth()
-        token_info = sp_oauth.get_access_token(code)
+        token_info = sp_oauth.get_access_token(code=code, check_cache=False) # VERY IMPORTANT: check_cache=False (Otherwise it might return a cached token)
         
         # Crear cliente de Spotify
         sp = Spotify(auth=token_info['access_token'])

@@ -355,7 +355,7 @@ origins = [
 
 #### 4. Usar HTTPS
 
-Las cookies se configuran automáticamente en `secure=True` cuando `ENVIRONMENT=production`
+Las cookies se configuran automáticamente en `secure=True` cuando `ENVIRONMENT=production`.
 
 #### 5. Render
 
@@ -414,12 +414,11 @@ redis-server
 
 ### "Session not found" en `/me/top-tracks`
 
-**Causa:** Cookie `session_token` expirada o no enviada
-**Solución:**
-
-- Asegúrate de que el navegador acepta cookies
-- Intenta hacer login nuevamente
-- Verifica que `REDIS_HOST` y `REDIS_PORT` sean correctos
+**Causa:** Cookie `session_token` expirada o no enviada  
+**Solución:**  
+    - Asegúrate de que el navegador acepta cookies
+    - Intenta hacer login nuevamente
+    - Verifica que `REDIS_HOST` y `REDIS_PORT` sean correctos
 
 ### CORS error en frontend
 
@@ -432,12 +431,12 @@ redis-server
 
 ### Buenas Prácticas Implementadas
 
-✅ **Cookies HttpOnly** - Imposible acceder vía JavaScript
-✅ **Tokens de Sesión Aleatorios** - UUID v4 para cada sesión
-✅ **Expiración Automática** - 24 horas en Redis
-✅ **SameSite=Lax** - Protección contra CSRF
-✅ **Secure Flag en Producción** - Solo HTTPS
-✅ **No almacena credenciales** - Solo tokens de Spotify
+- ✅ **Cookies HttpOnly** - Imposible acceder vía JavaScript
+- ✅ **Tokens de Sesión Aleatorios** - UUID v4 para cada sesión
+- ✅ **Expiración Automática** - 24 horas en Redis
+- ✅ **SameSite=Lax** - Protección contra CSRF
+- ✅ **Secure Flag en Producción** - Solo HTTPS
+- ✅ **No almacena credenciales** - Solo tokens de Spotify
 
 ---
 

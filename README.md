@@ -397,13 +397,13 @@ Configuración inicial, constantes globales
 
 ### "Invalid client" error en `/callback`
 
-**Causa:** Client ID o Client Secret incorrecto
-**Solución:** Verifica las credenciales en `.env` y en Spotify Dashboard
+- **Causa:** Client ID o Client Secret incorrecto  
+- **Solución:** Verifica las credenciales en `.env` y en Spotify Dashboard
 
 ### "Connection refused" en Redis
 
-**Causa:** Redis no está corriendo
-**Solución:**
+- **Causa:** Redis no está corriendo
+- **Solución:**
 
 ```bash
 # Verifica si Redis está corriendo
@@ -414,16 +414,16 @@ redis-server
 
 ### "Session not found" en `/me/top-tracks`
 
-**Causa:** Cookie `session_token` expirada o no enviada  
-**Solución:**  
+- **Causa:** Cookie `session_token` expirada o no enviada  
+- **Solución:**  
     - Asegúrate de que el navegador acepta cookies
     - Intenta hacer login nuevamente
     - Verifica que `REDIS_HOST` y `REDIS_PORT` sean correctos
 
 ### CORS error en frontend
 
-**Causa:** Dominio del frontend no está en la lista de `origins`
-**Solución:** Agrega tu dominio a `app.add_middleware(CORSMiddleware, allow_origins=[...])`
+- **Causa:** Dominio del frontend no está en la lista de `origins`  
+- **Solución:** Agrega tu dominio a `app.add_middleware(CORSMiddleware, allow_origins=[...])`
 
 ---
 

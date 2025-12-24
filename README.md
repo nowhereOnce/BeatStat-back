@@ -1,20 +1,26 @@
 # 🎵 BeatStat Backend
 
+![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat&logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=flat&logo=fastapi)
+![Redis](https://img.shields.io/badge/Redis-7.0+-red?style=flat&logo=redis)
+![Spotify API](https://img.shields.io/badge/Spotify-API-1DB954?style=flat&logo=spotify)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=flat)
+[![GitHub](https://img.shields.io/badge/GitHub-nowhereOnce-black?style=flat&logo=github)](https://github.com/nowhereOnce)
+
 Un backend construido con **FastAPI** que integra **Spotify OAuth 2.0** para mostrar estadísticas personalizadas de tu actividad musical. Obtén tus canciones más escuchadas, playlists y datos detallados de tu perfil de Spotify.
 
 ## 📋 Tabla de Contenidos
 
-- [Características](#características)
+- [Características](#-características)
 - [Arquitectura](#arquitectura)
-- [Requisitos Previos](#requisitos-previos)
-- [Instalación](#instalación)
+- [Requisitos Previos](#-requisitos-previos)
+- [Instalación](#-instalación)
 - [Configuración](#configuración)
-- [Uso](#uso)
-- [Endpoints](#endpoints)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Flujo de Autenticación](#flujo-de-autenticación)
-- [Variables de Entorno](#variables-de-entorno)
-- [Despliegue en Producción](#despliegue-en-producción)
+- [Uso](#-uso)
+- [Endpoints](#-endpoints)
+- [Flujo de Autenticación](#flujo-de-autenticación-detallado)
+- [Variables de Entorno](#-variables-de-entorno)
+- [Despliegue en Producción](#-despliegue-en-producción)
 
 ---
 
@@ -30,7 +36,7 @@ Un backend construido con **FastAPI** que integra **Spotify OAuth 2.0** para mos
 
 ---
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 ```plaintext
 BeatStat-backend
@@ -129,7 +135,7 @@ Obtener URL: redis://default:PASSWORD@HOST:PORT
 
 ---
 
-## ⚙️ Configuración
+## Configuración
 
 ### 1. Obtener Credenciales de Spotify
 
@@ -219,7 +225,7 @@ FastAPI genera documentación automática:
 
 ---
 
-## 🔐 Flujo de Autenticación Detallado
+## Flujo de Autenticación Detallado
 
 ### 1. Usuario Inicia Login
 
